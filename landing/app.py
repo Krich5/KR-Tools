@@ -5,8 +5,8 @@ import secrets, time, os
 
 app = FastAPI()
 
-AUTH_USER = os.environ.get("AUTH_USER", "kenley")
-AUTH_PASS = os.environ.get("AUTH_PASS", "KenleyR2026!")
+AUTH_USER = os.environ.get("AUTH_USER", "")
+AUTH_PASS = os.environ.get("AUTH_PASS_HASH", "")
 SESSIONS: dict[str, float] = {}
 COOKIE = "kr_sess"
 SESSION_DAYS = 7
@@ -45,7 +45,7 @@ def login_page(bad: str = ""):
 
 @app.post("/login")
 def login_post(username: str = Form(...), password: str = Form(...)):
-    if username == AUTH_USER and password == AUTH_PASS:
+    if username == AUTH_USER and bcrypt.checkpw(password.encode(), AUTH_PASS_HASH.encode()):
         token = new_session()
         r = RedirectResponse("/", status_code=302)
         r.set_cookie(
