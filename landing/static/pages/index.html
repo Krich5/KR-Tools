@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07101C" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KR Tools" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" href="/favicon.ico" />
+  <title>KR Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:         #07101C;
+      --border:     rgba(255,255,255,0.08);
+      --text:       #e2e8f0;
+      --muted:      rgba(255,255,255,0.35);
+      --blue:       #3B7BF5;
+      --green:      #4ade80;
+      --c-webhooks: #38bdf8;
+      --c-mockapi:  #a78bfa;
+      --c-sftp:     #4ade80;
+      --sb-open:    200px;
+      --sb-closed:  56px;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #07101C url('/gradient-background-dark.svg') center/cover no-repeat fixed;
+      color: var(--text);
+    }
+
+    /* ── App: row layout ── */
+    #app { display: flex; height: 100vh; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      flex-shrink: 0;
+      width: var(--sb-open);
+      display: flex;
+      flex-direction: column;
+      background: rgba(5,11,22,0.88);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--border);
+      transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+      overflow: hidden;
+      z-index: 30;
+    }
+    #sidebar.collapsed { width: var(--sb-closed); }
+
+    /* Header: logo + toggle */
+    .sb-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 12px 10px;
+      border-bottom: 1px solid var(--border);
+      min-height: 54px;
+      flex-shrink: 0;
+    }
+    .sb-logo {
+      height: 24px; width: auto;
+      flex-shrink: 0;
+      transition: opacity 0.2s, height 0.25s;
+    }
+    .sb-toggle {
+      margin-left: auto;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      border-radius: 8px; border: none;
+      background: none; cursor: pointer;
+      color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+    }
+    .sb-toggle:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+    .sb-toggle .material-symbols-outlined { font-size: 20px; }
+
+    /* Collapsed header: stack logo above toggle, keep logo visible */
+    #sidebar.collapsed .sb-head {
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 8px 8px;
+    }
+    #sidebar.collapsed .sb-logo { height: 18px; max-width: 40px; }
+    #sidebar.collapsed .sb-toggle { margin-left: 0; }
+
+    /* Nav items */
+    .sb-nav {
+      flex: 1;
+      display: flex; flex-direction: column;
+      gap: 2px;
+      padding: 10px 8px;
+      overflow: hidden;
+    }
+
+    .sb-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 10px;
+      border-radius: 9px; border: none;
+      background: none; cursor: pointer;
+      font-family: inherit;
+      color: var(--muted); text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+      position: relative; min-width: 0;
+    }
+    .sb-item:hover  { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75); }
+    .sb-item.active { background: rgba(255,255,255,0.08); }
+
+    /* Colored left accent on active */
+    .sb-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 25%; bottom: 25%;
+      width: 3px; border-radius: 0 3px 3px 0;
+      background: currentColor;
+    }
+
+    /* Per-tool active colors */
+    #tab-home.active     { color: #fff; }
+    #tab-webhooks.active { color: var(--c-webhooks); }
+    #tab-mockapi.active  { color: var(--c-mockapi); }
+    #tab-sftp.active     { color: var(--c-sftp); }
+
+    .sb-item .material-symbols-outlined { font-size: 20px; flex-shrink: 0; }
+
+    .sb-label {
+      font-size: 13px; font-weight: 500;
+      overflow: hidden;
+      max-width: 160px; opacity: 1;
+      transition: max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.15s;
+    }
+    #sidebar.collapsed .sb-label { max-width: 0; opacity: 0; }
+
+    /* Collapsed: center icons */
+    #sidebar.collapsed .sb-item {
+      justify-content: center;
+      padding: 10px 0;
+    }
+    #sidebar.collapsed .sb-item::before { display: none; }
+    /* Dot indicator when collapsed */
+    #sidebar.collapsed .sb-item.active::after {
+      content: '';
+      position: absolute;
+      right: 5px; top: 50%; transform: translateY(-50%);
+      width: 5px; height: 5px; border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Footer */
+    .sb-footer {
+      padding: 8px 8px 12px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── Content ── */
+    #content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    #main    { flex: 1; position: relative; overflow: hidden; }
+
+    .panel {
+      display: none; position: absolute;
+      inset: 0; width: 100%; height: 100%; border: none;
+    }
+    .panel.active { display: block; }
+
+    /* ── Home view ── */
+    #home-view {
+      position: absolute; inset: 0;
+      overflow-y: auto;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 24px 32px; gap: 44px;
+    }
+    #home-view.hidden { display: none; }
+
+    .home-hero { display: flex; flex-direction: column; align-items: center; gap: 14px; user-select: none; }
+    .home-logo-img {
+      display: block; max-width: 240px; max-height: 185px; width: auto; height: auto;
+      filter: drop-shadow(0 6px 20px rgba(59,123,245,0.3)) drop-shadow(0 0 40px rgba(74,222,128,0.1));
+    }
+    .home-tagline-row { display: flex; align-items: center; gap: 12px; }
+    .tbar { display: block; height: 1px; width: 44px; }
+    .tbar-l { background: linear-gradient(90deg,  transparent, var(--blue)); }
+    .tbar-r { background: linear-gradient(270deg, transparent, var(--green)); }
+    .tbar-text { font-size: 10px; font-weight: 700; letter-spacing: 7px; color: rgba(255,255,255,0.25); }
+
+    .home-cards {
+      display: flex; flex-wrap: wrap; gap: 16px;
+      justify-content: center; width: 100%; max-width: 780px;
+    }
+    .hcard {
+      width: 210px;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-top: 2px solid transparent;
+      border-radius: 14px; padding: 18px;
+      cursor: pointer; display: flex; flex-direction: column; gap: 9px;
+      transition: transform 0.2s, background 0.2s, box-shadow 0.25s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hcard:hover  { transform: translateY(-4px); background: rgba(255,255,255,0.08); }
+    .hcard:active { transform: scale(0.97); }
+    .hcard.webhooks { border-top-color: rgba(56,189,248,0.45); }
+    .hcard.mockapi  { border-top-color: rgba(167,139,250,0.45); }
+    .hcard.sftp     { border-top-color: rgba(74,222,128,0.45); }
+    .hcard.webhooks:hover { box-shadow: 0 16px 40px rgba(56,189,248,0.1); }
+    .hcard.mockapi:hover  { box-shadow: 0 16px 40px rgba(167,139,250,0.1); }
+    .hcard.sftp:hover     { box-shadow: 0 16px 40px rgba(74,222,128,0.1); }
+    .hcard-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .hcard-icon .material-symbols-outlined { font-size: 20px; }
+    .hcard.webhooks .hcard-icon { background: rgba(56,189,248,0.12);  color: var(--c-webhooks); }
+    .hcard.mockapi  .hcard-icon { background: rgba(167,139,250,0.12); color: var(--c-mockapi); }
+    .hcard.sftp     .hcard-icon { background: rgba(74,222,128,0.12);  color: var(--c-sftp); }
+    .hcard-name { font-size: 14px; font-weight: 700; color: #fff; }
+    .hcard-desc { font-size: 12px; color: var(--muted); line-height: 1.55; flex: 1; }
+    .hcard-open { margin-top: 6px; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
+    .hcard-open .material-symbols-outlined { font-size: 13px; }
+    .hcard.webhooks .hcard-open { color: var(--c-webhooks); }
+    .hcard.mockapi  .hcard-open { color: var(--c-mockapi); }
+    .hcard.sftp     .hcard-open { color: var(--c-sftp); }
+
+    /* ── Mobile nav bar (hidden on desktop) ── */
+    #mobile-nav { display: none; }
+
+    @media (max-width: 768px) {
+      #sidebar { display: none !important; }
+      #app { flex-direction: column; height: 100dvh; }
+      #content { width: 100%; }
+      #main { flex: 1; }
+
+      #mobile-nav {
+        display: flex;
+        flex-shrink: 0;
+        height: 56px;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: rgba(5,9,15,0.96);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255,255,255,0.08);
+        z-index: 50;
+      }
+      .mob-tab {
+        flex: 1; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 3px;
+        cursor: pointer; color: rgba(255,255,255,0.3);
+        font-size: 9px; font-weight: 600; letter-spacing: 0.3px;
+        text-transform: uppercase;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.15s;
+      }
+      .mob-tab .material-symbols-outlined { font-size: 22px; }
+      .mob-tab.active { color: #60a5fa; }
+      .mob-tab.active.webhooks { color: var(--c-webhooks); }
+      .mob-tab.active.mockapi  { color: var(--c-mockapi); }
+      .mob-tab.active.sftp     { color: var(--c-sftp); }
+
+      .home-cards { flex-direction: column; align-items: stretch; max-width: 100%; }
+      .hcard { width: 100% !important; }
+      #home-view { justify-content: flex-start; padding-top: 28px; gap: 28px; }
+      .home-logo-img { max-width: 160px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <nav id="sidebar" class="collapsed">
+      <div class="sb-head">
+        <img src="/assets/images/kr-logo.png" alt="KR" class="sb-logo" />
+        <button class="sb-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+          <span class="material-symbols-outlined" id="toggle-icon">menu</span>
+        </button>
+      </div>
+
+      <div class="sb-nav">
+        <button class="sb-item active" id="tab-home" onclick="goHome()">
+          <span class="material-symbols-outlined">home</span>
+          <span class="sb-label">Home</span>
+        </button>
+        <button class="sb-item" id="tab-webhooks" onclick="showPanel('webhooks')">
+          <span class="material-symbols-outlined">webhook</span>
+          <span class="sb-label">Webhooks</span>
+        </button>
+        <button class="sb-item" id="tab-mockapi" onclick="showPanel('mockapi')">
+          <span class="material-symbols-outlined">data_object</span>
+          <span class="sb-label">Mock API</span>
+        </button>
+        <button class="sb-item" id="tab-sftp" onclick="showPanel('sftp')">
+          <span class="material-symbols-outlined">folder_open</span>
+          <span class="sb-label">SFTP</span>
+        </button>
+      </div>
+
+      <div class="sb-footer">
+        <a href="/logout" class="sb-item">
+          <span class="material-symbols-outlined">logout</span>
+          <span class="sb-label">Sign out</span>
+        </a>
+      </div>
+    </nav>
+
+    <div id="content">
+      <main id="main">
+        <div id="home-view">
+          <div class="home-hero">
+            <img src="/assets/images/kr-logo.png" alt="KR Tools" class="home-logo-img" />
+            <div class="home-tagline-row">
+              <span class="tbar tbar-l"></span>
+              <span class="tbar-text">KR TOOLS</span>
+              <span class="tbar tbar-r"></span>
+            </div>
+          </div>
+          <div class="home-cards">
+            <div class="hcard webhooks" onclick="showPanel('webhooks')">
+              <div class="hcard-icon"><span class="material-symbols-outlined">webhook</span></div>
+              <div class="hcard-name">Webhooks</div>
+              <div class="hcard-desc">Inspect &amp; replay incoming webhooks</div>
+              <div class="hcard-open">Open <span class="material-symbols-outlined">arrow_outward</span></div>
+            </div>
+            <div class="hcard mockapi" onclick="showPanel('mockapi')">
+              <div class="hcard-icon"><span class="material-symbols-outlined">data_object</span></div>
+              <div class="hcard-name">Mock API</div>
+              <div class="hcard-desc">Instant REST endpoints for testing</div>
+              <div class="hcard-open">Open <span class="material-symbols-outlined">arrow_outward</span></div>
+            </div>
+            <div class="hcard sftp" onclick="showPanel('sftp')">
+              <div class="hcard-icon"><span class="material-symbols-outlined">folder_open</span></div>
+              <div class="hcard-name">SFTP</div>
+              <div class="hcard-desc">Secure file transfer &amp; browser</div>
+              <div class="hcard-open">Open <span class="material-symbols-outlined">arrow_outward</span></div>
+            </div>
+          </div>
+        </div>
+
+        <iframe id="frame-webhooks" class="panel" data-src="https://webhooks.kenleyr.com" allow="clipboard-write"></iframe>
+        <iframe id="frame-mockapi"  class="panel" data-src="https://api.kenleyr.com"      allow="clipboard-write"></iframe>
+        <iframe id="frame-sftp"     class="panel" data-src="https://sftp.kenleyr.com"     allow="clipboard-write"></iframe>
+      </main>
+    </div>
+
+    <!-- Mobile bottom nav (inside #app so flex column layout reserves height for it) -->
+    <nav id="mobile-nav">
+      <div class="mob-tab active" id="mob-home" onclick="goHome()">
+        <span class="material-symbols-outlined">home</span>
+        Home
+      </div>
+      <div class="mob-tab webhooks" id="mob-webhooks" onclick="showPanel('webhooks')">
+        <span class="material-symbols-outlined">webhook</span>
+        Webhooks
+      </div>
+      <div class="mob-tab mockapi" id="mob-mockapi" onclick="showPanel('mockapi')">
+        <span class="material-symbols-outlined">data_object</span>
+        Mock API
+      </div>
+      <div class="mob-tab sftp" id="mob-sftp" onclick="showPanel('sftp')">
+        <span class="material-symbols-outlined">folder_open</span>
+        SFTP
+      </div>
+    </nav>
+
+  </div>
+
+  <script>
+    const FRAMES = ['webhooks', 'mockapi', 'sftp'];
+    const loaded = new Set();
+
+    function showPanel(name) {
+      document.getElementById('home-view').classList.add('hidden');
+      FRAMES.forEach(id => {
+        document.getElementById('frame-' + id).classList.remove('active');
+        document.getElementById('tab-'   + id).classList.remove('active');
+        const mob = document.getElementById('mob-' + id);
+        if (mob) mob.classList.remove('active');
+      });
+      document.getElementById('tab-home').classList.remove('active');
+      document.getElementById('mob-home').classList.remove('active');
+      const frame = document.getElementById('frame-' + name);
+      if (!loaded.has(name)) { frame.src = frame.dataset.src; loaded.add(name); }
+      frame.classList.add('active');
+      document.getElementById('tab-' + name).classList.add('active');
+      const mob = document.getElementById('mob-' + name);
+      if (mob) mob.classList.add('active');
+      if (name === 'webhooks' && 'clearAppBadge' in navigator) navigator.clearAppBadge();
+    }
+
+    function goHome() {
+      FRAMES.forEach(id => {
+        document.getElementById('frame-' + id).classList.remove('active');
+        document.getElementById('tab-'   + id).classList.remove('active');
+        const mob = document.getElementById('mob-' + id);
+        if (mob) mob.classList.remove('active');
+      });
+      document.getElementById('home-view').classList.remove('hidden');
+      document.getElementById('tab-home').classList.add('active');
+      document.getElementById('mob-home').classList.add('active');
+    }
+
+    function toggleSidebar() {
+      const sb   = document.getElementById('sidebar');
+      const icon = document.getElementById('toggle-icon');
+      sb.classList.toggle('collapsed');
+      icon.textContent = sb.classList.contains('collapsed') ? 'menu' : 'menu_open';
+    }
+
+    // ── Service Worker + Push Notifications ──────────────────────────────────
+    const WEBHOOKS_ORIGIN = 'https://webhooks.kenleyr.com';
+
+    async function subscribePush(reg) {
+      try {
+        const resp = await fetch(WEBHOOKS_ORIGIN + '/_api/vapid-key');
+        const { key } = await resp.json();
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: key,
+        });
+        await fetch(WEBHOOKS_ORIGIN + '/_api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sub.toJSON()),
+        });
+        console.log('[push] subscribed');
+      } catch(e) { console.warn('[push] subscribe failed', e); }
+    }
+
+    async function initNotifications(reg) {
+      if (!('PushManager' in window)) return;
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+      const existing = await reg.pushManager.getSubscription();
+      if (!existing) await subscribePush(reg);
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        initNotifications(reg);
+
+        // Listen for messages from SW (notification click → open panel)
+        navigator.serviceWorker.addEventListener('message', e => {
+          if (e.data?.type === 'OPEN_PANEL') showPanel(e.data.panel);
+        });
+
+        // Handle ?panel= on fresh open from notification
+        const p = new URLSearchParams(location.search).get('panel');
+        if (p && FRAMES.includes(p)) showPanel(p);
+      }).catch(() => {});
+    }
+
+  </script>
+</body>
+</html>

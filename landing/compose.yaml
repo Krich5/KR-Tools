@@ -1,0 +1,11 @@
+services:
+  landing:
+    build: .
+    restart: unless-stopped
+    environment:
+      - AUTH_USER=Krich
+      - AUTH_PASS=binwyf-qiRme3-kakkof
+    volumes:
+      - ./static:/app/static
+    ports:
+      - "8000:8000"

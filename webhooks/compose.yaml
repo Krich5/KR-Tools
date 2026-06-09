@@ -1,0 +1,10 @@
+services:
+  webhook-receiver:
+    build: .
+    restart: unless-stopped
+    environment:
+      - WEBHOOK_TOKEN=${WEBHOOK_TOKEN:-}
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8001:8000"

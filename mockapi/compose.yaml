@@ -1,0 +1,8 @@
+services:
+  mockapi:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8002:8000"

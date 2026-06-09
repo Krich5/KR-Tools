@@ -1,0 +1,18 @@
+# Live data - never commit
+**/data/
+**/__pycache__/
+**/*.pyc
+
+# Local compose overrides
+**/compose.override.yaml
+docker-compose.override.yml
+
+# Env files
+.env
+**/.env
+
+# Ignore services not being deployed
+sftp/
+core/
+homepage/
+minecraft/
