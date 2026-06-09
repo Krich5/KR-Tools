@@ -2,11 +2,12 @@ from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from pathlib import Path
 import secrets, time, os
+import bcrypt
 
 app = FastAPI()
 
 AUTH_USER = os.environ.get("AUTH_USER", "")
-AUTH_PASS = os.environ.get("AUTH_PASS_HASH", "")
+AUTH_PASS_HASH = os.environ.get("AUTH_PASS_HASH", "")
 SESSIONS: dict[str, float] = {}
 COOKIE = "kr_sess"
 SESSION_DAYS = 7
