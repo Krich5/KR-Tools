@@ -1,7 +1,7 @@
 {
   "name": "KR Tools",
   "short_name": "KR Tools",
-  "description": "Webhooks, Mock API, and SFTP browser",
+  "description": "Webhooks and Mock API",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

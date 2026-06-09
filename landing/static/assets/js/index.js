@@ -1,4 +1,4 @@
-const FRAMES = ['webhooks', 'mockapi', 'sftp'];
+const FRAMES = ['webhooks', 'mockapi'];
 
 function showPanel(name) {
   document.getElementById('home-view').classList.add('hidden');

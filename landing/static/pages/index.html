@@ -26,7 +26,6 @@
       --green:      #4ade80;
       --c-webhooks: #38bdf8;
       --c-mockapi:  #a78bfa;
-      --c-sftp:     #4ade80;
       --sb-open:    200px;
       --sb-closed:  56px;
     }
@@ -130,7 +129,6 @@
     #tab-home.active     { color: #fff; }
     #tab-webhooks.active { color: var(--c-webhooks); }
     #tab-mockapi.active  { color: var(--c-mockapi); }
-    #tab-sftp.active     { color: var(--c-sftp); }
 
     .sb-item .material-symbols-outlined { font-size: 20px; flex-shrink: 0; }
 
@@ -214,22 +212,18 @@
     .hcard:active { transform: scale(0.97); }
     .hcard.webhooks { border-top-color: rgba(56,189,248,0.45); }
     .hcard.mockapi  { border-top-color: rgba(167,139,250,0.45); }
-    .hcard.sftp     { border-top-color: rgba(74,222,128,0.45); }
     .hcard.webhooks:hover { box-shadow: 0 16px 40px rgba(56,189,248,0.1); }
     .hcard.mockapi:hover  { box-shadow: 0 16px 40px rgba(167,139,250,0.1); }
-    .hcard.sftp:hover     { box-shadow: 0 16px 40px rgba(74,222,128,0.1); }
     .hcard-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
     .hcard-icon .material-symbols-outlined { font-size: 20px; }
     .hcard.webhooks .hcard-icon { background: rgba(56,189,248,0.12);  color: var(--c-webhooks); }
     .hcard.mockapi  .hcard-icon { background: rgba(167,139,250,0.12); color: var(--c-mockapi); }
-    .hcard.sftp     .hcard-icon { background: rgba(74,222,128,0.12);  color: var(--c-sftp); }
     .hcard-name { font-size: 14px; font-weight: 700; color: #fff; }
     .hcard-desc { font-size: 12px; color: var(--muted); line-height: 1.55; flex: 1; }
     .hcard-open { margin-top: 6px; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
     .hcard-open .material-symbols-outlined { font-size: 13px; }
     .hcard.webhooks .hcard-open { color: var(--c-webhooks); }
     .hcard.mockapi  .hcard-open { color: var(--c-mockapi); }
-    .hcard.sftp     .hcard-open { color: var(--c-sftp); }
 
     /* ── Mobile nav bar (hidden on desktop) ── */
     #mobile-nav { display: none; }
@@ -264,7 +258,6 @@
       .mob-tab.active { color: #60a5fa; }
       .mob-tab.active.webhooks { color: var(--c-webhooks); }
       .mob-tab.active.mockapi  { color: var(--c-mockapi); }
-      .mob-tab.active.sftp     { color: var(--c-sftp); }
 
       .home-cards { flex-direction: column; align-items: stretch; max-width: 100%; }
       .hcard { width: 100% !important; }
@@ -296,10 +289,6 @@
         <button class="sb-item" id="tab-mockapi" onclick="showPanel('mockapi')">
           <span class="material-symbols-outlined">data_object</span>
           <span class="sb-label">Mock API</span>
-        </button>
-        <button class="sb-item" id="tab-sftp" onclick="showPanel('sftp')">
-          <span class="material-symbols-outlined">folder_open</span>
-          <span class="sb-label">SFTP</span>
         </button>
       </div>
 
@@ -335,18 +324,11 @@
               <div class="hcard-desc">Instant REST endpoints for testing</div>
               <div class="hcard-open">Open <span class="material-symbols-outlined">arrow_outward</span></div>
             </div>
-            <div class="hcard sftp" onclick="showPanel('sftp')">
-              <div class="hcard-icon"><span class="material-symbols-outlined">folder_open</span></div>
-              <div class="hcard-name">SFTP</div>
-              <div class="hcard-desc">Secure file transfer &amp; browser</div>
-              <div class="hcard-open">Open <span class="material-symbols-outlined">arrow_outward</span></div>
-            </div>
           </div>
         </div>
 
         <iframe id="frame-webhooks" class="panel" data-src="https://webhooks.kenleyr.com" allow="clipboard-write"></iframe>
         <iframe id="frame-mockapi"  class="panel" data-src="https://api.kenleyr.com"      allow="clipboard-write"></iframe>
-        <iframe id="frame-sftp"     class="panel" data-src="https://sftp.kenleyr.com"     allow="clipboard-write"></iframe>
       </main>
     </div>
 
@@ -364,16 +346,12 @@
         <span class="material-symbols-outlined">data_object</span>
         Mock API
       </div>
-      <div class="mob-tab sftp" id="mob-sftp" onclick="showPanel('sftp')">
-        <span class="material-symbols-outlined">folder_open</span>
-        SFTP
-      </div>
     </nav>
 
   </div>
 
   <script>
-    const FRAMES = ['webhooks', 'mockapi', 'sftp'];
+    const FRAMES = ['webhooks', 'mockapi'];
     const loaded = new Set();
 
     function showPanel(name) {
