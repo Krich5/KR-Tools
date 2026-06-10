@@ -23,7 +23,7 @@
       --s-key:    #e2e8f0;
     }
 
-    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; }
+    html, body { height: 100%; overflow: hidden; background: transparent; color: var(--text); font-family: 'Inter', -apple-system, sans-serif; }
 
     #app {
       display: flex;
@@ -39,9 +39,15 @@
     #editor-pane {
       width: 55%;
       border-right: 1px solid var(--border);
+      background: rgba(7,16,28,0.45);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
     }
     #finder-pane {
       flex: 1;
+      background: rgba(7,16,28,0.35);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
     }
 
     /* ── Pane headers ── */
@@ -52,7 +58,7 @@
       gap: 10px;
       padding: 10px 14px;
       border-bottom: 1px solid var(--border);
-      background: rgba(5,11,22,0.6);
+      background: rgba(5,11,22,0.5);
     }
     .pane-title {
       font-size: 11px;
@@ -119,7 +125,7 @@
       gap: 8px;
       padding: 10px 14px;
       border-bottom: 1px solid var(--border);
-      background: rgba(5,11,22,0.6);
+      background: rgba(5,11,22,0.5);
     }
     #path-label {
       font-size: 11px;
@@ -249,7 +255,6 @@
       <div class="pane-head">
         <span class="pane-title">Input</span>
         <div class="btn-group">
-          <button class="btn" onclick="loadSample()">Sample</button>
           <button class="btn" onclick="beautify()">Beautify</button>
           <button class="btn" onclick="minify()">Minify</button>
           <button class="btn" onclick="clearAll()">Clear</button>
@@ -332,7 +337,7 @@
     function renderTree(data) {
       treeRoot.innerHTML = '';
       const frag = document.createDocumentFragment();
-      buildNodes(data, '', 0, frag);
+      buildNodes(data, '$', 0, frag);
       treeRoot.appendChild(frag);
     }
 
@@ -344,9 +349,9 @@
         : Object.entries(data);
 
       for (const [key, value] of entries) {
-        const fullPath = pathPrefix === ''
-          ? (isArray ? `[${key}]` : key)
-          : (isArray ? `${pathPrefix}[${key}]` : `${pathPrefix}.${key}`);
+        const fullPath = isArray
+          ? `${pathPrefix}[${key}]`
+          : `${pathPrefix}.${key}`;
 
         const isNested = typeof value === 'object' && value !== null;
         const nodeEl   = document.createElement('div');
@@ -463,32 +468,6 @@
       errorBar.textContent = '';
       errorBar.classList.remove('visible');
       showEmpty();
-    }
-
-    function loadSample() {
-      editor.value = JSON.stringify({
-        "user": {
-          "id": 1042,
-          "name": "Kenley Richardson",
-          "email": "krichardson@cxsol.com",
-          "role": "admin",
-          "active": true,
-          "metadata": null
-        },
-        "session": {
-          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-          "expires_at": "2026-12-31T23:59:59Z",
-          "scopes": ["read", "write", "admin"]
-        },
-        "stats": {
-          "webhooks": 42,
-          "endpoints": 7,
-          "requests_today": 128
-        }
-      }, null, 2);
-      errorBar.textContent = '';
-      errorBar.classList.remove('visible');
-      parse();
     }
 
     editor.addEventListener('input', onInput);
