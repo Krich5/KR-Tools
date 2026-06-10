@@ -153,7 +153,7 @@ def login_html(error: bool) -> str:
       color: #e2e8f0;
       overflow-x: hidden;
     }}
-    .bg {{ position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }}
+    .bg {{ position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; object-fit: cover; }}
     input:-webkit-autofill,
     input:-webkit-autofill:hover,
     input:-webkit-autofill:focus {{
@@ -292,29 +292,7 @@ def login_html(error: bool) -> str:
   </style>
 </head>
 <body>
-  <svg class="bg" viewBox="0 0 1440 920" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-    <rect width="1440" height="920" fill="#07101C"/>
-    <rect width="1440" height="920" fill="url(#lg0)" fill-opacity="0.8"/>
-    <rect width="1440" height="920" fill="url(#lg1)" fill-opacity="0.6"/>
-    <rect width="1440" height="920" fill="url(#lg2)" fill-opacity="0.8"/>
-    <rect width="1440" height="920" fill="url(#lg3)" fill-opacity="0.15"/>
-    <defs>
-      <radialGradient id="lg0" cx="0" cy="0" r="1" gradientTransform="matrix(225.5 425 -642.246 254.148 34.5 48)" gradientUnits="userSpaceOnUse"><stop stop-color="#A52C2C"/><stop offset="1" stop-opacity="0"/></radialGradient>
-      <radialGradient id="lg1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(269.5 -108.5) rotate(78.1068) scale(327.531 512.657)"><stop stop-color="#7C03F6"/><stop offset="1" stop-color="#493260" stop-opacity="0"/></radialGradient>
-      <radialGradient id="lg2" cx="0" cy="0" r="1" gradientTransform="matrix(21.5 736 -1128.69 100.749 698.5 -134.5)" gradientUnits="userSpaceOnUse"><stop stop-color="#21417C"/><stop offset="0.1" stop-color="#1D6ADB" stop-opacity="0.83"/><stop offset="0.46" stop-color="#1170CF" stop-opacity="0.2"/><stop offset="0.81" stop-opacity="0.1"/></radialGradient>
-      <radialGradient id="lg3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(69.5 886) rotate(-19.5711) scale(1491.15 2333.97)"><stop stop-color="#75006F"/><stop offset="0.48" stop-color="#FF00F2" stop-opacity="0"/></radialGradient>
-    </defs>
-    <g stroke="#3B7BF5" stroke-width="1" fill="none" opacity="0.12">
-      <path d="M 0,400 H 200 V 500 H 320 V 600 H 150 V 700"/>
-      <circle cx="200" cy="500" r="3" fill="#3B7BF5"/>
-      <circle cx="320" cy="600" r="2.5" fill="#3B7BF5"/>
-    </g>
-    <g stroke="#4ade80" stroke-width="1" fill="none" opacity="0.12">
-      <path d="M 1440,400 H 1240 V 500 H 1120 V 600 H 1290 V 700"/>
-      <circle cx="1240" cy="500" r="3" fill="#4ade80"/>
-      <circle cx="1120" cy="600" r="2.5" fill="#4ade80"/>
-    </g>
-  </svg>
+  <img src="/gradient-background-dark.svg" class="bg" alt="" aria-hidden="true">
 
   <div class="wrap">
     <div class="logo-wrap">
