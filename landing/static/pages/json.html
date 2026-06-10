@@ -76,6 +76,15 @@
     /* Monaco container */
     #monaco-container { flex: 1; overflow: hidden; }
 
+    /* Make Monaco background transparent so gradient shows through */
+    .monaco-editor,
+    .monaco-editor .overflow-guard,
+    .monaco-editor-background,
+    .monaco-editor .margin,
+    .monaco-editor .inputarea.ime-input {
+      background: transparent !important;
+    }
+
     /* Error bar */
     #error-bar {
       flex-shrink: 0;
@@ -261,7 +270,7 @@
           { token: 'delimiter',         foreground: '64748b' },
         ],
         colors: {
-          'editor.background':                '#07101C',
+          'editor.background':                '#00000000',
           'editor.foreground':                '#e2e8f0',
           'editorLineNumber.foreground':      '#ffffff25',
           'editorLineNumber.activeForeground':'#fb923c99',
