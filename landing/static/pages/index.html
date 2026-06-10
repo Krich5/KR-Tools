@@ -33,12 +33,20 @@
     html, body { height: 100%; overflow: hidden; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #07101C url('/gradient-background-dark.svg') center/cover no-repeat fixed;
+      background: #07101C;
       color: var(--text);
     }
 
+    .bg-img {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+
     /* ── App: row layout ── */
-    #app { display: flex; height: 100vh; }
+    #app { display: flex; height: 100vh; position: relative; z-index: 1; }
 
     /* ── Sidebar ── */
     #sidebar {
@@ -267,6 +275,7 @@
   </style>
 </head>
 <body>
+  <img src="/gradient-background-dark.svg" class="bg-img" alt="" aria-hidden="true">
   <div id="app">
 
     <nav id="sidebar" class="collapsed">
