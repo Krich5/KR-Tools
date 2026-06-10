@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #07101C;
+      --surface:  rgba(255,255,255,0.04);
+      --border:   rgba(255,255,255,0.08);
+      --text:     #e2e8f0;
+      --muted:    rgba(255,255,255,0.35);
+      --accent:   #fb923c;
+      --s-str:    #4ade80;
+      --s-num:    #60a5fa;
+      --s-bool:   #f472b6;
+      --s-null:   #94a3b8;
+      --s-key:    #e2e8f0;
+    }
+
+    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; }
+
+    #app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* ── Panes ── */
+    .pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #editor-pane {
+      width: 55%;
+      border-right: 1px solid var(--border);
+    }
+    #finder-pane {
+      flex: 1;
+    }
+
+    /* ── Pane headers ── */
+    .pane-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(5,11,22,0.6);
+    }
+    .pane-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .btn-group {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+    .btn {
+      padding: 5px 12px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+    .btn.accent { border-color: rgba(251,146,60,0.4); color: var(--accent); }
+    .btn.accent:hover { background: rgba(251,146,60,0.1); }
+
+    /* ── Editor ── */
+    #editor {
+      flex: 1;
+      resize: none;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      padding: 14px 16px;
+      width: 100%;
+      overflow-y: auto;
+    }
+    #editor::placeholder { color: var(--muted); }
+
+    /* ── Error bar ── */
+    #error-bar {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: #f87171;
+      background: rgba(248,113,113,0.08);
+      border-top: 1px solid rgba(248,113,113,0.2);
+      display: none;
+    }
+    #error-bar.visible { display: block; }
+
+    /* ── Path bar ── */
+    #path-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(5,11,22,0.6);
+    }
+    #path-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    #path-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 5px 10px;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+      font-size: 12px;
+      outline: none;
+      min-width: 0;
+    }
+    #copy-btn {
+      flex-shrink: 0;
+      padding: 5px 12px;
+      border-radius: 7px;
+      border: 1px solid rgba(251,146,60,0.4);
+      background: rgba(251,146,60,0.08);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #copy-btn:hover { background: rgba(251,146,60,0.15); }
+    #copy-btn.copied { color: #4ade80; border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
+
+    /* ── Tree ── */
+    #tree-root {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 0;
+    }
+    #tree-root::-webkit-scrollbar { width: 6px; }
+    #tree-root::-webkit-scrollbar-track { background: transparent; }
+    #tree-root::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+    .tree-node { user-select: none; }
+
+    .tree-row {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      padding: 3px 14px;
+      cursor: pointer;
+      border-radius: 0;
+      transition: background 0.1s;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .tree-row:hover { background: rgba(255,255,255,0.05); }
+    .tree-row.selected { background: rgba(251,146,60,0.1); }
+
+    .tree-toggle {
+      font-size: 9px;
+      color: var(--muted);
+      flex-shrink: 0;
+      width: 12px;
+      text-align: center;
+      margin-right: 2px;
+      transition: transform 0.15s;
+    }
+    .tree-toggle.open { transform: rotate(90deg); }
+    .tree-toggle.leaf { opacity: 0; pointer-events: none; }
+
+    .tree-key {
+      color: var(--s-key);
+      font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .tree-colon { color: var(--muted); margin: 0 2px; flex-shrink: 0; }
+
+    .tree-val { font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace; }
+    .tree-val.string  { color: var(--s-str); }
+    .tree-val.number  { color: var(--s-num); }
+    .tree-val.boolean { color: var(--s-bool); }
+    .tree-val.null    { color: var(--s-null); font-style: italic; }
+    .tree-val.object  { color: var(--muted); }
+    .tree-val.array   { color: var(--muted); }
+
+    .tree-children { display: none; }
+    .tree-children.open { display: block; }
+
+    /* indent per depth via margin on the row */
+    .tree-row { padding-left: calc(14px + var(--depth, 0) * 18px); }
+
+    /* ── Empty state ── */
+    #empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    #empty-state svg { opacity: 0.3; }
+
+    /* ── Scrollbar for editor ── */
+    #editor::-webkit-scrollbar { width: 6px; }
+    #editor::-webkit-scrollbar-track { background: transparent; }
+    #editor::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+    @media (max-width: 600px) {
+      #app { flex-direction: column; }
+      #editor-pane { width: 100%; height: 45%; border-right: none; border-bottom: 1px solid var(--border); }
+      #finder-pane { height: 55%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <div class="pane" id="editor-pane">
+      <div class="pane-head">
+        <span class="pane-title">Input</span>
+        <div class="btn-group">
+          <button class="btn" onclick="loadSample()">Sample</button>
+          <button class="btn" onclick="beautify()">Beautify</button>
+          <button class="btn" onclick="minify()">Minify</button>
+          <button class="btn" onclick="clearAll()">Clear</button>
+        </div>
+      </div>
+      <textarea id="editor" spellcheck="false" placeholder="Paste or type JSON here…"></textarea>
+      <div id="error-bar"></div>
+    </div>
+
+    <div class="pane" id="finder-pane">
+      <div id="path-bar">
+        <span id="path-label">Path</span>
+        <input id="path-input" type="text" readonly placeholder="click a node" />
+        <button id="copy-btn" onclick="copyPath()">Copy</button>
+      </div>
+      <div id="tree-root">
+        <div id="empty-state">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Paste JSON on the left to explore paths
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const editor    = document.getElementById('editor');
+    const errorBar  = document.getElementById('error-bar');
+    const treeRoot  = document.getElementById('tree-root');
+    const pathInput = document.getElementById('path-input');
+    const copyBtn   = document.getElementById('copy-btn');
+
+    let selectedRow = null;
+    let parseTimer  = null;
+
+    // ── Parse & render ────────────────────────────────────────────────────────
+    function onInput() {
+      clearTimeout(parseTimer);
+      parseTimer = setTimeout(parse, 250);
+    }
+
+    function parse() {
+      const raw = editor.value.trim();
+      if (!raw) { showEmpty(); return; }
+      try {
+        const data = JSON.parse(raw);
+        errorBar.textContent = '';
+        errorBar.classList.remove('visible');
+        renderTree(data);
+      } catch(e) {
+        errorBar.textContent = e.message;
+        errorBar.classList.add('visible');
+        showEmpty();
+      }
+    }
+
+    function showEmpty() {
+      treeRoot.innerHTML = `
+        <div id="empty-state">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Paste JSON on the left to explore paths
+        </div>`;
+      pathInput.value = '';
+      selectedRow = null;
+    }
+
+    // ── Tree builder ──────────────────────────────────────────────────────────
+    function renderTree(data) {
+      treeRoot.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      buildNodes(data, '', 0, frag);
+      treeRoot.appendChild(frag);
+    }
+
+    function buildNodes(data, pathPrefix, depth, container) {
+      if (typeof data !== 'object' || data === null) return;
+      const isArray = Array.isArray(data);
+      const entries = isArray
+        ? data.map((v, i) => [String(i), v])
+        : Object.entries(data);
+
+      for (const [key, value] of entries) {
+        const fullPath = pathPrefix === ''
+          ? (isArray ? `[${key}]` : key)
+          : (isArray ? `${pathPrefix}[${key}]` : `${pathPrefix}.${key}`);
+
+        const isNested = typeof value === 'object' && value !== null;
+        const nodeEl   = document.createElement('div');
+        nodeEl.className = 'tree-node';
+
+        const rowEl = document.createElement('div');
+        rowEl.className = 'tree-row';
+        rowEl.style.setProperty('--depth', depth);
+
+        // Toggle icon
+        const toggleEl = document.createElement('span');
+        toggleEl.className = isNested ? 'tree-toggle' : 'tree-toggle leaf';
+        toggleEl.textContent = '▶';
+
+        // Key
+        const keyEl = document.createElement('span');
+        keyEl.className = 'tree-key';
+        keyEl.textContent = isArray ? `[${key}]` : key;
+
+        // Colon
+        const colonEl = document.createElement('span');
+        colonEl.className = 'tree-colon';
+        colonEl.textContent = ':';
+
+        // Value preview
+        const valEl = document.createElement('span');
+        valEl.className = 'tree-val';
+
+        if (isNested) {
+          const isArr = Array.isArray(value);
+          const count = isArr ? value.length : Object.keys(value).length;
+          valEl.className += isArr ? ' array' : ' object';
+          valEl.textContent = isArr ? `[ ${count} item${count !== 1 ? 's' : ''} ]` : `{ ${count} key${count !== 1 ? 's' : ''} }`;
+        } else if (value === null) {
+          valEl.className += ' null';
+          valEl.textContent = 'null';
+        } else if (typeof value === 'string') {
+          valEl.className += ' string';
+          const preview = value.length > 60 ? value.slice(0, 60) + '…' : value;
+          valEl.textContent = `"${preview}"`;
+        } else if (typeof value === 'boolean') {
+          valEl.className += ' boolean';
+          valEl.textContent = String(value);
+        } else {
+          valEl.className += ' number';
+          valEl.textContent = String(value);
+        }
+
+        rowEl.append(toggleEl, keyEl, colonEl, valEl);
+
+        // Children container
+        let childrenEl = null;
+        if (isNested) {
+          childrenEl = document.createElement('div');
+          childrenEl.className = 'tree-children';
+          buildNodes(value, fullPath, depth + 1, childrenEl);
+
+          toggleEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const open = childrenEl.classList.toggle('open');
+            toggleEl.classList.toggle('open', open);
+          });
+        }
+
+        rowEl.addEventListener('click', () => selectRow(rowEl, fullPath));
+        nodeEl.appendChild(rowEl);
+        if (childrenEl) nodeEl.appendChild(childrenEl);
+        container.appendChild(nodeEl);
+      }
+    }
+
+    // ── Selection & path ──────────────────────────────────────────────────────
+    function selectRow(rowEl, path) {
+      if (selectedRow) selectedRow.classList.remove('selected');
+      selectedRow = rowEl;
+      rowEl.classList.add('selected');
+      pathInput.value = path;
+      copyBtn.classList.remove('copied');
+      copyBtn.textContent = 'Copy';
+    }
+
+    function copyPath() {
+      const val = pathInput.value;
+      if (!val) return;
+      navigator.clipboard.writeText(val).then(() => {
+        copyBtn.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy';
+          copyBtn.classList.remove('copied');
+        }, 1500);
+      });
+    }
+
+    // ── Toolbar actions ───────────────────────────────────────────────────────
+    function beautify() {
+      try {
+        const data = JSON.parse(editor.value);
+        editor.value = JSON.stringify(data, null, 2);
+        parse();
+      } catch {}
+    }
+
+    function minify() {
+      try {
+        const data = JSON.parse(editor.value);
+        editor.value = JSON.stringify(data);
+        parse();
+      } catch {}
+    }
+
+    function clearAll() {
+      editor.value = '';
+      errorBar.textContent = '';
+      errorBar.classList.remove('visible');
+      showEmpty();
+    }
+
+    function loadSample() {
+      editor.value = JSON.stringify({
+        "user": {
+          "id": 1042,
+          "name": "Kenley Richardson",
+          "email": "krichardson@cxsol.com",
+          "role": "admin",
+          "active": true,
+          "metadata": null
+        },
+        "session": {
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+          "expires_at": "2026-12-31T23:59:59Z",
+          "scopes": ["read", "write", "admin"]
+        },
+        "stats": {
+          "webhooks": 42,
+          "endpoints": 7,
+          "requests_today": 128
+        }
+      }, null, 2);
+      errorBar.textContent = '';
+      errorBar.classList.remove('visible');
+      parse();
+    }
+
+    editor.addEventListener('input', onInput);
+
+    // Support pasting into editor
+    editor.addEventListener('paste', () => setTimeout(parse, 50));
+  </script>
+</body>
+</html>
