@@ -22,7 +22,7 @@
       --s-key:    #e2e8f0;
     }
 
-    html, body { height: 100%; overflow: hidden; background: #07101C; color: var(--text); font-family: 'Inter', -apple-system, sans-serif; }
+    html, body { height: 100%; overflow: hidden; background: #07101C url('/gradient-background-dark.svg') center/cover no-repeat fixed; color: var(--text); font-family: 'Inter', -apple-system, sans-serif; }
 
     #app { display: flex; height: 100vh; }
 
@@ -31,11 +31,11 @@
     #editor-pane {
       width: 55%;
       border-right: 1px solid var(--border);
-      background: #07101C;
+      background: transparent;
     }
     #finder-pane {
       flex: 1;
-      background: #07101C;
+      background: transparent;
     }
 
     .pane-head {
@@ -71,6 +71,17 @@
 
     /* Monaco container */
     #monaco-container { flex: 1; overflow: hidden; }
+
+    /* Strip Monaco's solid background so the gradient shows through */
+    .monaco-editor,
+    .monaco-editor .overflow-guard,
+    .monaco-editor-background,
+    .monaco-editor .margin,
+    .monaco-editor .margin-view-overlays,
+    .monaco-editor .monaco-scrollable-element,
+    .monaco-editor .lines-content.monaco-editor-background {
+      background: transparent !important;
+    }
 
 
     /* Error bar */
@@ -258,7 +269,7 @@
           { token: 'delimiter',         foreground: '64748b' },
         ],
         colors: {
-          'editor.background':                '#07101C',
+          'editor.background':                '#07101C00',
           'editor.foreground':                '#e2e8f0',
           'editorLineNumber.foreground':      '#ffffff25',
           'editorLineNumber.activeForeground':'#fb923c99',
