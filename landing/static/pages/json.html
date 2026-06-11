@@ -143,41 +143,6 @@
     #copy-btn:hover { background: rgba(251,146,60,0.15); }
     #copy-btn.copied { color: #4ade80; border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
 
-    /* Value bar — shows resolved value beneath path bar */
-    #value-bar {
-      flex-shrink: 0;
-      display: none;
-      align-items: baseline;
-      gap: 8px;
-      padding: 6px 14px 8px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(5,11,22,0.6);
-    }
-    #value-bar.visible { display: flex; }
-    #value-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--muted);
-      flex-shrink: 0;
-    }
-    #value-display {
-      font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
-      font-size: 12px;
-      word-break: break-all;
-      white-space: pre-wrap;
-      max-height: 72px;
-      overflow-y: auto;
-      flex: 1;
-    }
-    #value-display.vstr  { color: var(--s-str); }
-    #value-display.vnum  { color: var(--s-num); }
-    #value-display.vbool { color: var(--s-bool); }
-    #value-display.vnull { color: var(--s-null); font-style: italic; }
-    #value-display.vobj  { color: var(--muted); }
-    #value-display.verr  { color: #f87171; }
-
     /* Tree */
     #tree-root { flex: 1; overflow-y: auto; padding: 10px 0; }
     #tree-root::-webkit-scrollbar { width: 6px; }
@@ -289,20 +254,6 @@
       min-width: 0;
     }
     #eval-input:focus { border-color: rgba(251,146,60,0.4); }
-    #eval-run {
-      flex-shrink: 0;
-      padding: 5px 12px;
-      border-radius: 7px;
-      border: 1px solid rgba(251,146,60,0.4);
-      background: rgba(251,146,60,0.08);
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    #eval-run:hover { background: rgba(251,146,60,0.15); }
     #eval-result {
       padding: 8px 14px;
       font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
@@ -348,10 +299,6 @@
         <input id="path-input" type="text" readonly placeholder="click a node" />
         <button id="copy-btn" onclick="copyPath()">Copy</button>
       </div>
-      <div id="value-bar">
-        <span id="value-label">Value</span>
-        <div id="value-display"></div>
-      </div>
       <div id="tree-root">
         <div id="empty-state">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -371,7 +318,6 @@
         </div>
         <div id="eval-input-row">
           <input id="eval-input" type="text" placeholder="$.key.nested  or  $.items[0].name" spellcheck="false" />
-          <button id="eval-run" onclick="evalPath()">Run</button>
         </div>
         <div id="eval-result" class="empty">—</div>
       </div>
@@ -617,45 +563,12 @@
     evalInput.addEventListener('keydown', e => { if (e.key === 'Enter') evalPath(); });
     evalInput.addEventListener('input', () => evalPath());
 
-    const valueBar     = document.getElementById('value-bar');
-    const valueDisplay = document.getElementById('value-display');
-
-    function showValueBar(data, expr) {
-      try {
-        const result = resolvePath(data, expr);
-        let text, cls;
-        if (result === undefined) {
-          text = 'path not found'; cls = 'verr';
-        } else if (result === null) {
-          text = 'null'; cls = 'vnull';
-        } else if (typeof result === 'object') {
-          text = JSON.stringify(result, null, 2); cls = 'vobj';
-        } else if (typeof result === 'boolean') {
-          text = String(result); cls = 'vbool';
-        } else if (typeof result === 'number') {
-          text = String(result); cls = 'vnum';
-        } else {
-          text = `"${result}"`; cls = 'vstr';
-        }
-        valueDisplay.textContent = text;
-        valueDisplay.className = cls;
-        valueBar.classList.add('visible');
-      } catch(e) {
-        valueDisplay.textContent = e.message;
-        valueDisplay.className = 'verr';
-        valueBar.classList.add('visible');
-      }
-    }
-
     // Also populate eval input when clicking tree nodes
     const _origSelectRow = selectRow;
     selectRow = function(rowEl, path) {
       _origSelectRow(rowEl, path);
       evalInput.value = path;
-      if (parsedData !== null) {
-        evalPath();
-        showValueBar(parsedData, path);
-      }
+      if (parsedData !== null) evalPath();
     };
 
     function evalPath() {
@@ -721,7 +634,6 @@
     const _origShowEmpty = showEmpty;
     showEmpty = function() {
       parsedData = null;
-      valueBar.classList.remove('visible');
       _origShowEmpty();
     };
 
