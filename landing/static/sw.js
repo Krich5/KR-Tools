@@ -1,4 +1,4 @@
-const CACHE = 'kr-tools-v6';
+const CACHE = 'kr-tools-v7';
 const PRECACHE = [
   '/',
   '/assets/css/styles.css',
@@ -29,7 +29,10 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fresh = fetch(e.request).then(res => {
-        if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
         return res;
       }).catch(() => cached);
       return cached || fresh;
