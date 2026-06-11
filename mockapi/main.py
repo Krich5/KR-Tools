@@ -285,8 +285,12 @@ async def two_seg_get(seg1: str, seg2: str, request: Request):
 
 @app.post("/{seg1}/{seg2}")
 async def two_seg_post(seg1: str, seg2: str, request: Request):
-    if seg1.startswith("_") or not is_project(seg1):
+    if seg1.startswith("_"):
         raise HTTPException(404)
+    # Auto-create the folder and resource if they don't exist
+    d = project_dir(seg1)
+    if not d.exists():
+        d.mkdir(parents=True)
     f = proj_resource_file(seg1, seg2)
     if not f.exists():
         f.write_text("[]")

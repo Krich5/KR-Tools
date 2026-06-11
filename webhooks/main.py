@@ -653,12 +653,11 @@ HTML = """<!DOCTYPE html>
             <button class="dismiss-btn" onclick="dismissRequest('${r.id}')" title="Dismiss">✕</button>
           </div>
           <div class="detail-body">
-            <div class="section-label">Raw</div>
+            ${typeof r.body === 'object' && r.body ? `<div class="section-label">Parsed</div>${bodyHtml}<div class="section-label" style="margin-top:14px">Raw</div>` : '<div class="section-label">Raw</div>'}
             <div class="pre-wrap">
               <pre>${rawText || '(empty)'}</pre>
               ${rawText ? `<button class="copy-raw-btn" data-copy="${escAttr(rawText)}" onclick="copyVal(this,this.dataset.copy)">${COPY_ICON} Copy</button>` : ''}
             </div>
-            ${typeof r.body === 'object' && r.body ? `<div class="section-label" style="margin-top:14px">Parsed</div>${bodyHtml}` : ''}
             ${r.query ? `<div class="section-label" style="margin-top:14px">Query</div><pre>${r.query}</pre>` : ''}
           </div>
         </div>`;

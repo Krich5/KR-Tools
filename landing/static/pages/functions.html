@@ -14,7 +14,7 @@
       --border:   rgba(255,255,255,0.08);
       --text:     #e2e8f0;
       --muted:    rgba(255,255,255,0.35);
-      --accent:   #fbbf24;
+      --accent:   #4ade80;
     }
 
     html, body {
@@ -52,11 +52,11 @@
     }
     .btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
     .btn-accent {
-      border-color: rgba(251,191,36,0.4);
-      background: rgba(251,191,36,0.08);
+      border-color: rgba(74,222,128,0.4);
+      background: rgba(74,222,128,0.08);
       color: var(--accent);
     }
-    .btn-accent:hover { background: rgba(251,191,36,0.15); }
+    .btn-accent:hover { background: rgba(74,222,128,0.15); }
     .btn-accent.copied { color: #4ade80; border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
 
     /* Input variable row */
@@ -79,12 +79,7 @@
       font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
       font-size: 13px; outline: none; width: 220px;
     }
-    #input-var:focus { border-color: rgba(251,191,36,0.4); }
-    #input-var-hint {
-      font-size: 11px; color: var(--muted);
-      font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
-    }
-
+    #input-var:focus { border-color: rgba(74,222,128,0.4); }
     /* Table area */
     #table-scroll {
       flex: 1; overflow: auto; padding: 14px;
@@ -123,7 +118,7 @@
       font-size: 12px; font-weight: 600; outline: none;
       width: 100%; min-width: 60px;
     }
-    .col-name-input::placeholder { color: rgba(251,191,36,0.3); }
+    .col-name-input::placeholder { color: rgba(74,222,128,0.3); }
     .col-del-btn {
       flex-shrink: 0; background: none; border: none;
       color: rgba(255,255,255,0.2); cursor: pointer;
@@ -185,7 +180,7 @@
 
     /* Code pane */
     #code-output {
-      flex: 1; overflow-y: auto;
+      flex: 1; min-height: 0; overflow-y: auto;
       padding: 14px 16px;
       font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
       font-size: 12.5px; line-height: 1.75;
@@ -204,6 +199,80 @@
     .py-val  { color: #4ade80; }
     .py-null { color: #94a3b8; }
     .py-muted { color: rgba(255,255,255,0.3); }
+
+    /* ── Tester section ── */
+    #test-section {
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column;
+    }
+    #test-header {
+      display: flex; align-items: center;
+      padding: 8px 14px;
+      cursor: pointer; user-select: none;
+      border-bottom: 1px solid var(--border);
+      background: rgba(5,11,22,0.8);
+      flex-shrink: 0;
+    }
+    #test-header:hover .test-header-title,
+    #test-header:hover .test-caret { color: var(--text); }
+    .test-header-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .test-caret { margin-left: auto; font-size: 10px; color: var(--muted); }
+    #test-body {
+      height: 210px; display: flex; overflow: hidden;
+    }
+    #test-body.collapsed { display: none; }
+    #test-inputs-pane, #test-result-pane {
+      flex: 1; display: flex; flex-direction: column;
+      padding: 10px 12px; gap: 8px; overflow: hidden; min-height: 0;
+    }
+    #test-inputs-pane { border-right: 1px solid var(--border); }
+    .test-col-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: rgba(255,255,255,0.4);
+      flex-shrink: 0;
+    }
+    #test-var-row { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    #test-var-name {
+      font-size: 12px; font-weight: 600; color: var(--accent);
+      font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+    }
+    .test-type-badge { font-size: 10px; color: var(--muted); letter-spacing: 0.5px; }
+    #test-input {
+      flex: 1; resize: none;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: 7px; padding: 8px 10px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+      font-size: 12px; outline: none;
+    }
+    #test-input:focus { border-color: rgba(74,222,128,0.3); }
+    #test-btn { align-self: flex-end; flex-shrink: 0; }
+    #test-result-output {
+      flex: 1; overflow: auto; min-height: 0;
+      font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+      font-size: 12px; line-height: 1.8;
+    }
+    #test-result-output::-webkit-scrollbar { width: 4px; }
+    #test-result-output::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .test-empty { color: var(--muted); font-size: 12px; }
+    .test-res-row { display: block; white-space: pre; }
+    .test-data-row {
+      cursor: pointer; border-radius: 3px; padding: 0 3px;
+      transition: background 0.1s;
+    }
+    .test-data-row:hover { background: rgba(74,222,128,0.1); }
+    .test-data-row.copied { outline: 1px solid rgba(74,222,128,0.3); border-radius: 3px; }
+    .test-data-row.copied .py-key,
+    .test-data-row.copied .py-str { color: #4ade80 !important; }
+    .test-path-flash {
+      font-size: 10px; color: #4ade80; margin-left: 8px;
+      animation: fadeout 1.2s forwards;
+    }
+    @keyframes fadeout { 0%{opacity:1} 70%{opacity:1} 100%{opacity:0} }
 
     @media (max-width: 640px) {
       #app { flex-direction: column; }
@@ -224,7 +293,6 @@
     <div id="input-var-row">
       <span id="input-var-label">Input Variable</span>
       <input id="input-var" type="text" placeholder="str_DNIS" spellcheck="false" oninput="generate()" />
-      <span id="input-var-hint">request.data['inputs'][…]</span>
     </div>
 
     <div id="table-scroll">
@@ -245,6 +313,29 @@
       </div>
     </div>
     <div id="code-output"></div>
+
+    <!-- ── Tester ── -->
+    <div id="test-section">
+      <div id="test-header" onclick="toggleTest()">
+        <span class="test-header-title">Test</span>
+        <span class="test-caret" id="test-caret">&#9650;</span>
+      </div>
+      <div id="test-body">
+        <div id="test-inputs-pane">
+          <div class="test-col-label">Inputs</div>
+          <div id="test-var-row">
+            <span id="test-var-name">str_DNIS</span>
+            <span class="test-type-badge">STRING</span>
+          </div>
+          <textarea id="test-input" placeholder="Enter test value&#8230;" spellcheck="false"></textarea>
+          <button class="btn btn-accent" id="test-btn" onclick="runTest()">Test</button>
+        </div>
+        <div id="test-result-pane">
+          <div class="test-col-label">Result</div>
+          <div id="test-result-output"><span class="test-empty">Run a test to see results</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -373,6 +464,9 @@
     ].join('\n');
 
     renderCode(rawCode, inputVar, lookupName, colNames);
+
+    const tn = document.getElementById('test-var-name');
+    if (tn) tn.textContent = inputVar;
   }
 
   function renderCode(code, inputVar, lookupName, colNames) {
@@ -527,6 +621,64 @@
     renderTable();
     generate();
   });
+
+  // ── Tester ────────────────────────────────────────────────────────────────
+  let testOpen = true;
+
+  function toggleTest() {
+    testOpen = !testOpen;
+    document.getElementById('test-body').classList.toggle('collapsed', !testOpen);
+    document.getElementById('test-caret').innerHTML = testOpen ? '&#9650;' : '&#9660;';
+  }
+
+  function runTest() {
+    const inputVar = document.getElementById('input-var').value.trim() || 'str_DNIS';
+    const testVal  = document.getElementById('test-input').value.trim();
+    const colNames = cols.map(c => c.trim() || 'Var');
+    const match    = rows.find(r => r.input === testVal);
+
+    const data = {};
+    colNames.forEach((col, i) => {
+      data[col] = match ? (match.vals[i] !== undefined ? match.vals[i] : '') : 'Null';
+    });
+
+    renderTestResult({ statusCode: 200, data, errorMessage: '', timeTakenInMilliseconds: 0 }, colNames);
+  }
+
+  function renderTestResult(result, colNames) {
+    const out = document.getElementById('test-result-output');
+    const dataRows = colNames.map((col, i) => {
+      const val   = result.data[col];
+      const path  = '$.data.' + col;
+      const comma = i < colNames.length - 1 ? ',' : '';
+      return `<span class="test-res-row">    <span class="test-data-row" data-path="${esc(path)}" onclick="copyTestPath(this,'${esc(path)}')">&quot;<span class="py-key">${esc(col)}</span>&quot;: &quot;<span class="py-str">${esc(val)}</span>&quot;</span>${comma}</span>`;
+    }).join('\n');
+
+    out.innerHTML = [
+      `<span class="test-res-row py-muted">{</span>`,
+      `<span class="test-res-row">  &quot;<span class="py-key">statusCode</span>&quot;: <span class="py-val">${result.statusCode}</span>,</span>`,
+      `<span class="test-res-row">  &quot;<span class="py-key">data</span>&quot;: {</span>`,
+      dataRows,
+      `<span class="test-res-row">  },</span>`,
+      `<span class="test-res-row">  &quot;<span class="py-key">errorMessage</span>&quot;: <span class="py-str">&quot;&quot;</span>,</span>`,
+      `<span class="test-res-row">  &quot;<span class="py-key">timeTakenInMilliseconds</span>&quot;: <span class="py-val">0</span></span>`,
+      `<span class="test-res-row py-muted">}</span>`,
+    ].join('\n');
+  }
+
+  function copyTestPath(el, path) {
+    navigator.clipboard.writeText(path).then(() => {
+      el.classList.add('copied');
+      const flash = document.createElement('span');
+      flash.className = 'test-path-flash';
+      flash.textContent = path;
+      el.appendChild(flash);
+      setTimeout(() => {
+        el.classList.remove('copied');
+        if (flash.parentNode) flash.parentNode.removeChild(flash);
+      }, 1200);
+    });
+  }
 
   // ── Init ───────────────────────────────────────────────────────────────────
   renderTable();
