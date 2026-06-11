@@ -27,6 +27,7 @@
       --c-webhooks: #38bdf8;
       --c-mockapi:  #a78bfa;
       --c-json:     #fb923c;
+      --c-functions:#fbbf24;
       --sb-open:    200px;
       --sb-closed:  56px;
     }
@@ -130,7 +131,8 @@
     #tab-home.active     { color: #fff; }
     #tab-webhooks.active { color: var(--c-webhooks); }
     #tab-mockapi.active  { color: var(--c-mockapi); }
-    #tab-json.active     { color: var(--c-json); }
+    #tab-json.active       { color: var(--c-json); }
+    #tab-functions.active  { color: var(--c-functions); }
 
     .sb-item .material-symbols-outlined { font-size: 20px; flex-shrink: 0; }
 
@@ -214,22 +216,26 @@
     .hcard:active { transform: scale(0.97); }
     .hcard.webhooks { border-top-color: rgba(56,189,248,0.45); }
     .hcard.mockapi  { border-top-color: rgba(167,139,250,0.45); }
-    .hcard.json     { border-top-color: rgba(251,146,60,0.45); }
+    .hcard.json      { border-top-color: rgba(251,146,60,0.45); }
+    .hcard.functions { border-top-color: rgba(251,191,36,0.45); }
     .hcard.webhooks:hover { box-shadow: 0 16px 40px rgba(56,189,248,0.1); }
     .hcard.mockapi:hover  { box-shadow: 0 16px 40px rgba(167,139,250,0.1); }
-    .hcard.json:hover     { box-shadow: 0 16px 40px rgba(251,146,60,0.1); }
+    .hcard.json:hover      { box-shadow: 0 16px 40px rgba(251,146,60,0.1); }
+    .hcard.functions:hover { box-shadow: 0 16px 40px rgba(251,191,36,0.1); }
     .hcard-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
     .hcard-icon .material-symbols-outlined { font-size: 20px; }
     .hcard.webhooks .hcard-icon { background: rgba(56,189,248,0.12);  color: var(--c-webhooks); }
     .hcard.mockapi  .hcard-icon { background: rgba(167,139,250,0.12); color: var(--c-mockapi); }
-    .hcard.json     .hcard-icon { background: rgba(251,146,60,0.12);  color: var(--c-json); }
+    .hcard.json      .hcard-icon { background: rgba(251,146,60,0.12);  color: var(--c-json); }
+    .hcard.functions .hcard-icon { background: rgba(251,191,36,0.12);  color: var(--c-functions); }
     .hcard-name { font-size: 14px; font-weight: 700; color: #fff; }
     .hcard-desc { font-size: 12px; color: var(--muted); line-height: 1.55; flex: 1; }
     .hcard-open { margin-top: 6px; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
     .hcard-open .material-symbols-outlined { font-size: 13px; }
     .hcard.webhooks .hcard-open { color: var(--c-webhooks); }
     .hcard.mockapi  .hcard-open { color: var(--c-mockapi); }
-    .hcard.json     .hcard-open { color: var(--c-json); }
+    .hcard.json      .hcard-open { color: var(--c-json); }
+    .hcard.functions .hcard-open { color: var(--c-functions); }
 
     /* ── Mobile nav bar (hidden on desktop) ── */
     #mobile-nav { display: none; }
@@ -264,7 +270,8 @@
       .mob-tab.active { color: #60a5fa; }
       .mob-tab.active.webhooks { color: var(--c-webhooks); }
       .mob-tab.active.mockapi  { color: var(--c-mockapi); }
-      .mob-tab.active.json     { color: var(--c-json); }
+      .mob-tab.active.json      { color: var(--c-json); }
+      .mob-tab.active.functions { color: var(--c-functions); }
 
       .home-cards { flex-direction: column; align-items: stretch; max-width: 100%; }
       .hcard { width: 100% !important; }
@@ -300,6 +307,10 @@
         <button class="sb-item" id="tab-json" onclick="showPanel('json')">
           <span class="material-symbols-outlined">data_array</span>
           <span class="sb-label">JSON</span>
+        </button>
+        <button class="sb-item" id="tab-functions" onclick="showPanel('functions')">
+          <span class="material-symbols-outlined">function</span>
+          <span class="sb-label">Functions</span>
         </button>
       </div>
 
@@ -341,12 +352,19 @@
               <div class="hcard-desc">Beautify, minify &amp; explore paths</div>
               <div class="hcard-open">Open <span class="material-symbols-outlined">arrow_outward</span></div>
             </div>
+            <div class="hcard functions" onclick="showPanel('functions')">
+              <div class="hcard-icon"><span class="material-symbols-outlined">function</span></div>
+              <div class="hcard-name">Functions</div>
+              <div class="hcard-desc">Build WxCC lookup function scripts</div>
+              <div class="hcard-open">Open <span class="material-symbols-outlined">arrow_outward</span></div>
+            </div>
           </div>
         </div>
 
         <iframe id="frame-webhooks" class="panel" data-src="https://webhooks.kenleyr.com" allow="clipboard-write"></iframe>
         <iframe id="frame-mockapi"  class="panel" data-src="https://api.kenleyr.com"      allow="clipboard-write"></iframe>
-        <iframe id="frame-json"     class="panel" data-src="/pages/json.html"              allow="clipboard-write" allowtransparency="true"></iframe>
+        <iframe id="frame-json"      class="panel" data-src="/pages/json.html"              allow="clipboard-write" allowtransparency="true"></iframe>
+        <iframe id="frame-functions" class="panel" data-src="/pages/functions.html"         allow="clipboard-write" allowtransparency="true"></iframe>
       </main>
     </div>
 
@@ -368,12 +386,16 @@
         <span class="material-symbols-outlined">data_array</span>
         JSON
       </div>
+      <div class="mob-tab functions" id="mob-functions" onclick="showPanel('functions')">
+        <span class="material-symbols-outlined">function</span>
+        Functions
+      </div>
     </nav>
 
   </div>
 
   <script>
-    const FRAMES = ['webhooks', 'mockapi', 'json'];
+    const FRAMES = ['webhooks', 'mockapi', 'json', 'functions'];
     const loaded = new Set();
 
     function showPanel(name) {
