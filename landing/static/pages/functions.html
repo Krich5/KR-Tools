@@ -87,7 +87,7 @@
 
     /* Table area */
     #table-scroll {
-      flex: 1; overflow: auto; padding: 14px 14px 0;
+      flex: 1; overflow: auto; padding: 14px;
     }
     #table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
     #table-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -141,15 +141,34 @@
     }
     .add-col-btn:hover { color: var(--accent); }
 
-    /* Delete row column */
-    .td-del { width: 32px; text-align: center; }
-    .row-del-btn {
+    /* Action column (copy + delete) */
+    .td-del { width: 56px; text-align: center; white-space: nowrap; }
+    .row-copy-btn, .row-del-btn {
       background: none; border: none;
-      color: rgba(255,255,255,0.2);
-      cursor: pointer; font-size: 14px;
-      padding: 4px 8px; line-height: 1;
+      cursor: pointer; font-size: 13px;
+      padding: 4px 5px; line-height: 1;
     }
+    .row-copy-btn { color: rgba(255,255,255,0.2); }
+    .row-copy-btn:hover { color: var(--accent); }
+    .row-copy-btn.ok { color: #4ade80; }
+    .row-del-btn { color: rgba(255,255,255,0.2); }
     .row-del-btn:hover { color: #f87171; }
+
+    /* Add row footer row */
+    .tr-add-row td {
+      padding: 0;
+      border-top: 1px dashed rgba(255,255,255,0.08);
+      border-bottom: none; border-left: none; border-right: none;
+    }
+    .add-row-btn {
+      display: block; width: 100%; text-align: right;
+      background: none; border: none;
+      color: rgba(255,255,255,0.3);
+      font-size: 12px; font-weight: 600; font-family: inherit;
+      cursor: pointer; padding: 8px 14px;
+      transition: color 0.15s;
+    }
+    .add-row-btn:hover { color: var(--accent); }
 
     /* Data cells */
     .cell-input {
@@ -163,11 +182,6 @@
     .cell-input::placeholder { color: rgba(255,255,255,0.15); }
     .cell-input:focus { background: rgba(255,255,255,0.03); }
     .td-input-val .cell-input { color: #60a5fa; }
-
-    #table-footer {
-      flex-shrink: 0;
-      padding: 10px 14px 14px;
-    }
 
     /* Code pane */
     #code-output {
@@ -205,9 +219,6 @@
   <div class="pane" id="builder-pane">
     <div class="pane-head">
       <span class="pane-title">Lookup Builder</span>
-      <div class="btn-group">
-        <button class="btn" onclick="addRow()">+ Row</button>
-      </div>
     </div>
 
     <div id="input-var-row">
@@ -220,10 +231,8 @@
       <table id="lookup-table">
         <thead id="t-head"></thead>
         <tbody id="t-body"></tbody>
+        <tfoot id="t-foot"></tfoot>
       </table>
-    </div>
-    <div id="table-footer">
-      <button class="btn" onclick="addRow()">+ Add Row</button>
     </div>
   </div>
 
@@ -280,6 +289,8 @@
   function renderTable() {
     const thead = document.getElementById('t-head');
     const tbody = document.getElementById('t-body');
+    const tfoot = document.getElementById('t-foot');
+    const totalCols = cols.length + 3; // Input + vars + add-col + actions
 
     thead.innerHTML = `<tr>
       <th class="th-input-fixed">Input</th>
@@ -296,25 +307,34 @@
       <th class="th-add-col">
         <button class="add-col-btn" onclick="addColumn()" title="Add column">+</button>
       </th>
+      <th class="td-del"></th>
     </tr>`;
 
     tbody.innerHTML = rows.map((row, ri) => `
       <tr>
         <td class="td-input-val">
-          <input class="cell-input" value="${esc(row.input)}" placeholder="input${ri+1}"
+          <input class="cell-input" data-ri="${ri}" data-ci="-1" value="${esc(row.input)}" placeholder="input${ri+1}"
             oninput="rows[${ri}].input=this.value;generate()">
         </td>
         ${cols.map((_, ci) => `
           <td>
-            <input class="cell-input" value="${esc(row.vals[ci]||'')}" placeholder="value"
+            <input class="cell-input" data-ri="${ri}" data-ci="${ci}" value="${esc(row.vals[ci]||'')}" placeholder="value"
               oninput="rows[${ri}].vals[${ci}]=this.value;generate()">
           </td>`).join('')}
+        <td></td>
         <td class="td-del">
+          <button class="row-copy-btn" id="row-copy-${ri}" onclick="copyRow(${ri})" title="Copy row">⎘</button>
           ${rows.length > 1
             ? `<button class="row-del-btn" onclick="deleteRow(${ri})" title="Remove row">✕</button>`
             : ''}
         </td>
       </tr>`).join('');
+
+    tfoot.innerHTML = `<tr class="tr-add-row">
+      <td colspan="${totalCols}">
+        <button class="add-row-btn" onclick="addRow()">+ Add Row</button>
+      </td>
+    </tr>`;
   }
 
   // ── Code generation ────────────────────────────────────────────────────────
@@ -452,6 +472,61 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#x27;');
   }
+
+  // ── Copy row ───────────────────────────────────────────────────────────────
+  function copyRow(ri) {
+    const row = rows[ri];
+    const colNames = cols.map(c => c.trim() || 'Var');
+    const pairs = colNames.map((col, i) => `"${col}": "${row.vals[i] || ''}"`).join(', ');
+    const text = `"${row.input || ''}": {${pairs}}`;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('row-copy-' + ri);
+      if (btn) { btn.classList.add('ok'); setTimeout(() => btn.classList.remove('ok'), 1200); }
+    });
+  }
+
+  // ── Excel/spreadsheet paste ────────────────────────────────────────────────
+  document.getElementById('lookup-table').addEventListener('paste', function(e) {
+    const target = e.target;
+    if (!target.classList.contains('cell-input')) return;
+
+    const text = (e.clipboardData || window.clipboardData).getData('text');
+    if (!text.includes('\t') && !text.includes('\n') && !text.includes('\r')) return;
+
+    e.preventDefault();
+
+    const startRi = parseInt(target.dataset.ri);
+    const startCi = parseInt(target.dataset.ci); // -1 = Input col, 0+ = var cols
+
+    const pastedRows = text.split(/\r?\n|\r/).filter(r => r.length > 0);
+
+    // Grow rows array as needed
+    while (rows.length < startRi + pastedRows.length) {
+      rows.push({ input: '', vals: cols.map(() => '') });
+    }
+
+    pastedRows.forEach((rowText, rowOffset) => {
+      const cells = rowText.split('\t');
+      const ri = startRi + rowOffset;
+
+      cells.forEach((cellVal, colOffset) => {
+        const ci = startCi + colOffset;
+        if (ci === -1) {
+          rows[ri].input = cellVal.trim();
+        } else if (ci >= 0) {
+          // Grow columns as needed
+          while (cols.length <= ci) {
+            cols.push('Var' + (cols.length + 1));
+            rows.forEach(r => { while (r.vals.length <= ci) r.vals.push(''); });
+          }
+          rows[ri].vals[ci] = cellVal.trim();
+        }
+      });
+    });
+
+    renderTable();
+    generate();
+  });
 
   // ── Init ───────────────────────────────────────────────────────────────────
   renderTable();
