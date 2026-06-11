@@ -911,6 +911,10 @@ async def delete_request(path: str, request: Request):
 
 @app.post("/_railway")
 async def railway_webhook(request: Request):
+    if WEBHOOK_TOKEN:
+        token = request.query_params.get("token", "")
+        if token != WEBHOOK_TOKEN:
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
     try:
         payload = await request.json()
     except Exception:
