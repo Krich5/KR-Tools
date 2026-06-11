@@ -1,4 +1,4 @@
-const CACHE = 'kr-tools-v11';
+const CACHE = 'kr-tools-v12';
 const PRECACHE = [
   '/assets/css/styles.css',
   '/assets/js/index.js',
