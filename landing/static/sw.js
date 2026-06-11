@@ -1,6 +1,5 @@
-const CACHE = 'kr-tools-v10';
+const CACHE = 'kr-tools-v11';
 const PRECACHE = [
-  '/',
   '/assets/css/styles.css',
   '/assets/js/index.js',
   '/assets/images/kr-logo.png',
@@ -9,6 +8,13 @@ const PRECACHE = [
   '/icon-512.png',
   '/manifest.json',
 ];
+
+function isHtml(request) {
+  const url = new URL(request.url);
+  return url.pathname === '/' ||
+         url.pathname.endsWith('.html') ||
+         (request.headers.get('Accept') || '').includes('text/html');
+}
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -26,6 +32,9 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) return;
+  // HTML pages always go to the network — never serve stale markup
+  if (isHtml(e.request)) return;
+  // Static assets: stale-while-revalidate
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fresh = fetch(e.request).then(res => {
