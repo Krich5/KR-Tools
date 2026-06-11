@@ -232,10 +232,28 @@
     }
     #empty-state svg { opacity: 0.3; }
 
+    /* Resize handle */
+    #eval-resize {
+      flex-shrink: 0;
+      height: 5px;
+      cursor: ns-resize;
+      background: transparent;
+      border-top: 1px solid var(--border);
+      transition: background 0.15s;
+      position: relative;
+    }
+    #eval-resize:hover,
+    #eval-resize.dragging { background: rgba(251,146,60,0.25); border-color: rgba(251,146,60,0.5); }
+
     /* Evaluator */
     #eval-pane {
       flex-shrink: 0;
-      border-top: 1px solid var(--border);
+      height: 160px;
+      min-height: 60px;
+      max-height: 60vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
       background: rgba(5,11,22,0.5);
     }
     #eval-head {
@@ -346,6 +364,7 @@
           Paste JSON on the left to explore paths
         </div>
       </div>
+      <div id="eval-resize"></div>
       <div id="eval-pane">
         <div id="eval-head">
           <span id="eval-title">Evaluate Path</span>
@@ -596,6 +615,7 @@
     const evalResult = document.getElementById('eval-result');
 
     evalInput.addEventListener('keydown', e => { if (e.key === 'Enter') evalPath(); });
+    evalInput.addEventListener('input', () => evalPath());
 
     const valueBar     = document.getElementById('value-bar');
     const valueDisplay = document.getElementById('value-display');
@@ -704,6 +724,38 @@
       valueBar.classList.remove('visible');
       _origShowEmpty();
     };
+
+    // ── Eval pane resize ──────────────────────────────────────────────────────
+    (function() {
+      const handle   = document.getElementById('eval-resize');
+      const evalPane = document.getElementById('eval-pane');
+      let dragging = false, startY = 0, startH = 0;
+
+      handle.addEventListener('mousedown', e => {
+        dragging = true;
+        startY = e.clientY;
+        startH = evalPane.offsetHeight;
+        handle.classList.add('dragging');
+        document.body.style.cursor = 'ns-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const delta = startY - e.clientY;
+        const newH = Math.min(Math.max(startH + delta, 60), window.innerHeight * 0.6);
+        evalPane.style.height = newH + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      });
+    })();
   </script>
 </body>
 </html>
