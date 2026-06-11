@@ -69,6 +69,19 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 DATA_FILE = Path("/app/data/storage.json")
 DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+RAILWAY_FILE = Path("/app/data/railway_status.json")
+
+def load_railway_status() -> list:
+    if RAILWAY_FILE.exists():
+        try:
+            return json.loads(RAILWAY_FILE.read_text())
+        except Exception:
+            pass
+    return []
+
+def save_railway_status(entries: list):
+    RAILWAY_FILE.write_text(json.dumps(entries, indent=2))
+
 def load_storage() -> dict:
     if DATA_FILE.exists():
         try:
@@ -894,6 +907,42 @@ async def delete_request(path: str, request: Request):
             del storage[path]
     save_storage()
     return {"status": "deleted"}
+
+
+@app.post("/_railway")
+async def railway_webhook(request: Request):
+    try:
+        payload = await request.json()
+    except Exception:
+        return {"ok": False, "error": "invalid JSON"}
+
+    entries = load_railway_status()
+
+    deployment = payload.get("deployment") or {}
+    meta       = deployment.get("meta") or {}
+    service    = (payload.get("service") or {}).get("name", "unknown")
+    environment = (payload.get("environment") or {}).get("name", "production")
+    status     = deployment.get("status") or payload.get("status", "UNKNOWN")
+    timestamp  = payload.get("timestamp") or datetime.utcnow().isoformat() + "Z"
+
+    entry = {
+        "timestamp":   timestamp,
+        "service":     service,
+        "environment": environment,
+        "status":      status,
+        "commit":      meta.get("commitMessage", ""),
+        "branch":      meta.get("branch", ""),
+        "author":      meta.get("author", ""),
+    }
+
+    entries.insert(0, entry)
+    save_railway_status(entries[:50])
+    return {"ok": True}
+
+
+@app.get("/_railway/status")
+async def railway_status():
+    return load_railway_status()
 
 
 IGNORE_EXTENSIONS = {".js", ".css", ".png", ".ico", ".svg", ".jpg", ".jpeg", ".gif", ".woff", ".woff2", ".ttf", ".map", ".txt", ".php", ".asp", ".aspx", ".jsp", ".xml", ".zip", ".tar", ".gz", ".sql", ".bak", ".backup", ".old", ".orig", ".env", ".log", ".conf", ".config", ".cfg", ".ini", ".yaml", ".yml", ".toml"}
