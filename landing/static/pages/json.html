@@ -197,6 +197,75 @@
     }
     #empty-state svg { opacity: 0.3; }
 
+    /* Evaluator */
+    #eval-pane {
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      background: rgba(5,11,22,0.5);
+    }
+    #eval-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    #eval-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    #eval-input-row {
+      display: flex;
+      gap: 6px;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    #eval-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 5px 10px;
+      color: var(--s-str);
+      font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+      font-size: 12px;
+      outline: none;
+      min-width: 0;
+    }
+    #eval-input:focus { border-color: rgba(251,146,60,0.4); }
+    #eval-run {
+      flex-shrink: 0;
+      padding: 5px 12px;
+      border-radius: 7px;
+      border: 1px solid rgba(251,146,60,0.4);
+      background: rgba(251,146,60,0.08);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #eval-run:hover { background: rgba(251,146,60,0.15); }
+    #eval-result {
+      padding: 8px 14px;
+      font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      max-height: 120px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    #eval-result::-webkit-scrollbar { width: 4px; }
+    #eval-result::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    #eval-result.ok    { color: var(--s-str); }
+    #eval-result.err   { color: #f87171; }
+    #eval-result.empty { color: var(--muted); font-style: italic; }
+
     @media (max-width: 600px) {
       #app { flex-direction: column; }
       #editor-pane { width: 100%; height: 45%; border-right: none; border-bottom: 1px solid var(--border); }
@@ -237,6 +306,16 @@
           </svg>
           Paste JSON on the left to explore paths
         </div>
+      </div>
+      <div id="eval-pane">
+        <div id="eval-head">
+          <span id="eval-title">Evaluate Path</span>
+        </div>
+        <div id="eval-input-row">
+          <input id="eval-input" type="text" placeholder="$.key.nested  or  $.items[0].name" spellcheck="false" />
+          <button id="eval-run" onclick="evalPath()">Run</button>
+        </div>
+        <div id="eval-result" class="empty">—</div>
       </div>
     </div>
 
@@ -470,6 +549,88 @@
       errorBar.classList.remove('visible');
       showEmpty();
     }
+
+    // ── Path evaluator ────────────────────────────────────────────────────────
+    let parsedData = null;
+
+    const evalInput  = document.getElementById('eval-input');
+    const evalResult = document.getElementById('eval-result');
+
+    evalInput.addEventListener('keydown', e => { if (e.key === 'Enter') evalPath(); });
+
+    // Also populate eval input when clicking tree nodes
+    const _origSelectRow = selectRow;
+    selectRow = function(rowEl, path) {
+      _origSelectRow(rowEl, path);
+      evalInput.value = path;
+      if (parsedData !== null) evalPath();
+    };
+
+    function evalPath() {
+      const expr = evalInput.value.trim();
+      if (!expr) { setEvalResult('—', 'empty'); return; }
+      if (parsedData === null) { setEvalResult('No JSON loaded', 'err'); return; }
+      try {
+        const result = resolvePath(parsedData, expr);
+        if (result === undefined) {
+          setEvalResult('undefined — path not found', 'err');
+        } else {
+          const out = typeof result === 'object' && result !== null
+            ? JSON.stringify(result, null, 2)
+            : String(result);
+          setEvalResult(out, 'ok');
+        }
+      } catch(e) {
+        setEvalResult(e.message, 'err');
+      }
+    }
+
+    function setEvalResult(text, cls) {
+      evalResult.textContent = text;
+      evalResult.className = cls;
+    }
+
+    function resolvePath(data, expr) {
+      // Strip leading $
+      let path = expr.startsWith('$') ? expr.slice(1) : expr;
+      if (path.startsWith('.')) path = path.slice(1);
+      if (path === '') return data;
+
+      // Tokenise: split on . and [] keeping bracket content
+      const tokens = [];
+      const re = /([^.[]+)|\[(\d+)\]/g;
+      let m;
+      while ((m = re.exec(path)) !== null) {
+        if (m[1] !== undefined) tokens.push({ type: 'key',   val: m[1] });
+        else                    tokens.push({ type: 'index', val: parseInt(m[2], 10) });
+      }
+
+      let cur = data;
+      for (const tok of tokens) {
+        if (cur === null || cur === undefined) return undefined;
+        if (tok.type === 'key') {
+          if (typeof cur !== 'object' || Array.isArray(cur)) return undefined;
+          cur = cur[tok.val];
+        } else {
+          if (!Array.isArray(cur)) return undefined;
+          cur = cur[tok.val];
+        }
+      }
+      return cur;
+    }
+
+    // Store parsed data so evaluator can use it
+    const _origRenderTree = renderTree;
+    renderTree = function(data) {
+      parsedData = data;
+      _origRenderTree(data);
+    };
+
+    const _origShowEmpty = showEmpty;
+    showEmpty = function() {
+      parsedData = null;
+      _origShowEmpty();
+    };
   </script>
 </body>
 </html>
