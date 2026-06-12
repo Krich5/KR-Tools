@@ -922,36 +922,26 @@ async def railway_webhook(request: Request):
 
     entries = load_railway_status()
 
-    deployment  = payload.get("deployment") or {}
-    meta        = deployment.get("meta") or {}
-    environment = (payload.get("environment") or {}).get("name", "production")
+    # Railway payload structure: type, details{}, resource{project,service,environment,deployment}, timestamp
+    details  = payload.get("details") or {}
+    resource = payload.get("resource") or {}
+
+    service     = (resource.get("service") or {}).get("name", "unknown")
+    environment = (resource.get("environment") or {}).get("name", "production")
     timestamp   = payload.get("timestamp") or datetime.utcnow().isoformat() + "Z"
-
-    # Try multiple paths Railway may use for service name
-    service = (
-        (payload.get("service") or {}).get("name")
-        or payload.get("serviceName")
-        or (payload.get("deployment") or {}).get("serviceName")
-        or (payload.get("project") or {}).get("name")
-        or "unknown"
-    )
-
-    # Try multiple paths for status
-    status = (
-        deployment.get("status")
-        or payload.get("status")
-        or payload.get("type")
-        or "UNKNOWN"
-    )
+    status      = details.get("status") or payload.get("type", "UNKNOWN")
+    event_type  = payload.get("type", "")
 
     entry = {
         "timestamp":   timestamp,
         "service":     service,
         "environment": environment,
         "status":      status,
-        "commit":      meta.get("commitMessage", ""),
-        "branch":      meta.get("branch", ""),
-        "author":      meta.get("author", ""),
+        "event":       event_type,
+        "commit":      details.get("commitMessage", ""),
+        "branch":      details.get("branch", ""),
+        "author":      details.get("commitAuthor", ""),
+        "hash":        details.get("commitHash", "")[:7] if details.get("commitHash") else "",
         "_raw":        payload,
     }
 
