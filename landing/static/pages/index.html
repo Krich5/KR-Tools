@@ -138,37 +138,43 @@
       flex-shrink: 0;
     }
 
-    /* ── Deploy status bar ── */
-    #deploy-bar {
-      flex-shrink: 0;
-      display: none;
-      align-items: center; gap: 10px;
-      padding: 0 14px;
-      height: 30px;
-      background: rgba(5,11,22,0.85);
-      border-bottom: 1px solid var(--border);
-      overflow: hidden;
+    /* ── Status sidebar tab ── */
+    #tab-status.active { color: #fff; }
+
+    /* ── Status view ── */
+    #status-view {
+      position: absolute; inset: 0;
+      overflow-y: auto;
+      display: flex; flex-direction: column;
+      padding: 24px;
+      gap: 8px;
     }
-    #deploy-bar.visible { display: flex; }
-    .dep-pill {
-      display: flex; align-items: center; gap: 5px;
-      padding: 3px 8px;
-      border-radius: 20px;
+    #status-view.hidden { display: none; }
+    .status-heading {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .dep-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.06);
     }
     .dep-dot {
-      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 4px;
     }
     .dep-dot.pulsing { animation: dep-pulse 1.2s ease-in-out infinite; }
     @keyframes dep-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    .dep-service { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); }
-    .dep-status  { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; }
-    .dep-msg {
-      font-size: 10px; color: rgba(255,255,255,0.3);
-      max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .dep-time { font-size: 10px; color: rgba(255,255,255,0.2); flex-shrink: 0; }
+    .dep-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .dep-row-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .dep-service { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.8); }
+    .dep-status  { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+    .dep-time    { font-size: 11px; color: rgba(255,255,255,0.25); margin-left: auto; }
+    .dep-commit  { font-size: 12px; color: var(--muted); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dep-empty   { color: var(--muted); font-size: 13px; }
 
     /* ── Content ── */
     #content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
@@ -316,6 +322,10 @@
       </div>
 
       <div class="sb-footer">
+        <button class="sb-item" id="tab-status" onclick="showStatus()">
+          <span class="material-symbols-outlined">monitoring</span>
+          <span class="sb-label">Status</span>
+        </button>
         <a href="/logout" class="sb-item">
           <span class="material-symbols-outlined">logout</span>
           <span class="sb-label">Sign out</span>
@@ -324,7 +334,6 @@
     </nav>
 
     <div id="content">
-      <div id="deploy-bar"></div>
       <main id="main">
         <div id="home-view">
           <div class="home-hero">
@@ -361,6 +370,11 @@
               <div class="hcard-open">Open <span class="material-symbols-outlined">arrow_outward</span></div>
             </div>
           </div>
+        </div>
+
+        <div id="status-view" class="hidden">
+          <div class="status-heading">Deployments</div>
+          <div id="status-list"><div class="dep-empty">Loading…</div></div>
         </div>
 
         <iframe id="frame-webhooks" class="panel" data-src="https://webhooks.kenleyr.com" allow="clipboard-write"></iframe>
@@ -401,15 +415,7 @@
     const loaded = new Set();
 
     function showPanel(name) {
-      document.getElementById('home-view').classList.add('hidden');
-      FRAMES.forEach(id => {
-        document.getElementById('frame-' + id).classList.remove('active');
-        document.getElementById('tab-'   + id).classList.remove('active');
-        const mob = document.getElementById('mob-' + id);
-        if (mob) mob.classList.remove('active');
-      });
-      document.getElementById('tab-home').classList.remove('active');
-      document.getElementById('mob-home').classList.remove('active');
+      clearAll();
       const frame = document.getElementById('frame-' + name);
       if (!loaded.has(name)) { frame.src = frame.dataset.src; loaded.add(name); }
       frame.classList.add('active');
@@ -419,16 +425,76 @@
       if (name === 'webhooks' && 'clearAppBadge' in navigator) navigator.clearAppBadge();
     }
 
-    function goHome() {
+    function clearAll() {
       FRAMES.forEach(id => {
         document.getElementById('frame-' + id).classList.remove('active');
         document.getElementById('tab-'   + id).classList.remove('active');
         const mob = document.getElementById('mob-' + id);
         if (mob) mob.classList.remove('active');
       });
+      document.getElementById('home-view').classList.add('hidden');
+      document.getElementById('status-view').classList.add('hidden');
+      document.getElementById('tab-home').classList.remove('active');
+      document.getElementById('tab-status').classList.remove('active');
+      document.getElementById('mob-home').classList.remove('active');
+    }
+
+    function goHome() {
+      clearAll();
       document.getElementById('home-view').classList.remove('hidden');
       document.getElementById('tab-home').classList.add('active');
       document.getElementById('mob-home').classList.add('active');
+    }
+
+    function showStatus() {
+      clearAll();
+      document.getElementById('status-view').classList.remove('hidden');
+      document.getElementById('tab-status').classList.add('active');
+      loadDeployStatus();
+    }
+
+    const STATUS_COLOR = {
+      SUCCESS: '#4ade80', DEPLOYING: '#fbbf24', BUILDING: '#fbbf24',
+      INITIALIZING: '#fbbf24', FAILED: '#f87171', CRASHED: '#f87171',
+    };
+    const IN_PROGRESS = new Set(['DEPLOYING', 'BUILDING', 'INITIALIZING']);
+
+    function timeAgo(ts) {
+      const s = (Date.now() - new Date(ts).getTime()) / 1000;
+      if (s < 60)   return Math.round(s)    + 's ago';
+      if (s < 3600) return Math.round(s/60) + 'm ago';
+      if (s < 86400) return Math.round(s/3600) + 'h ago';
+      return Math.round(s/86400) + 'd ago';
+    }
+
+    async function loadDeployStatus() {
+      const list = document.getElementById('status-list');
+      try {
+        const res = await fetch('https://webhooks.kenleyr.com/_railway/status');
+        const entries = await res.json();
+        if (!Array.isArray(entries) || !entries.length) {
+          list.innerHTML = '<div class="dep-empty">No deployments recorded yet.</div>';
+          return;
+        }
+        list.innerHTML = entries.map(e => {
+          const color = STATUS_COLOR[e.status] || 'rgba(255,255,255,0.3)';
+          const pulse = IN_PROGRESS.has(e.status) ? ' pulsing' : '';
+          const commit = e.commit ? e.commit.split('\n')[0] : '';
+          return `<div class="dep-row">
+            <span class="dep-dot${pulse}" style="background:${color}"></span>
+            <div class="dep-info">
+              <div class="dep-row-top">
+                <span class="dep-service">${e.service}</span>
+                <span class="dep-status" style="color:${color}">${e.status}</span>
+                <span class="dep-time">${timeAgo(e.timestamp)}</span>
+              </div>
+              ${commit ? `<div class="dep-commit">${commit}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+      } catch(err) {
+        list.innerHTML = '<div class="dep-empty">Could not load status.</div>';
+      }
     }
 
     // ── Service Worker + Push Notifications ──────────────────────────────────
@@ -474,58 +540,6 @@
       }).catch(() => {});
     }
 
-    // ── Railway deploy status ─────────────────────────────────────────────
-    (function() {
-      const STATUS_URL = 'https://webhooks.kenleyr.com/_railway/status';
-      const bar = document.getElementById('deploy-bar');
-
-      const STATUS_COLOR = {
-        SUCCESS:   '#4ade80',
-        DEPLOYING: '#fbbf24',
-        BUILDING:  '#fbbf24',
-        FAILED:    '#f87171',
-        CRASHED:   '#f87171',
-        REMOVED:   'rgba(255,255,255,0.25)',
-      };
-      const IN_PROGRESS = new Set(['DEPLOYING', 'BUILDING', 'INITIALIZING']);
-
-      function timeAgo(ts) {
-        const s = (Date.now() - new Date(ts).getTime()) / 1000;
-        if (s < 60)   return Math.round(s)    + 's ago';
-        if (s < 3600) return Math.round(s/60) + 'm ago';
-        return Math.round(s/3600) + 'h ago';
-      }
-
-      async function fetchStatus() {
-        try {
-          const res = await fetch(STATUS_URL);
-          if (!res.ok) return;
-          const entries = await res.json();
-          if (!Array.isArray(entries) || !entries.length) return;
-
-          const latest = {};
-          entries.forEach(e => { if (!latest[e.service]) latest[e.service] = e; });
-
-          bar.innerHTML = Object.values(latest).map(e => {
-            const color   = STATUS_COLOR[e.status] || 'rgba(255,255,255,0.25)';
-            const pulse   = IN_PROGRESS.has(e.status) ? ' pulsing' : '';
-            const msg     = e.commit ? e.commit.split('\n')[0].slice(0, 45) : '';
-            return `<span class="dep-pill">
-              <span class="dep-dot${pulse}" style="background:${color}"></span>
-              <span class="dep-service">${e.service}</span>
-              <span class="dep-status" style="color:${color}">${e.status}</span>
-              ${msg ? `<span class="dep-msg">${msg}</span>` : ''}
-              <span class="dep-time">${timeAgo(e.timestamp)}</span>
-            </span>`;
-          }).join('');
-
-          bar.classList.add('visible');
-        } catch(e) { /* silently ignore */ }
-      }
-
-      fetchStatus();
-      setInterval(fetchStatus, 15000);
-    })();
 
   </script>
 </body>

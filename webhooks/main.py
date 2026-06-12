@@ -922,12 +922,27 @@ async def railway_webhook(request: Request):
 
     entries = load_railway_status()
 
-    deployment = payload.get("deployment") or {}
-    meta       = deployment.get("meta") or {}
-    service    = (payload.get("service") or {}).get("name", "unknown")
+    deployment  = payload.get("deployment") or {}
+    meta        = deployment.get("meta") or {}
     environment = (payload.get("environment") or {}).get("name", "production")
-    status     = deployment.get("status") or payload.get("status", "UNKNOWN")
-    timestamp  = payload.get("timestamp") or datetime.utcnow().isoformat() + "Z"
+    timestamp   = payload.get("timestamp") or datetime.utcnow().isoformat() + "Z"
+
+    # Try multiple paths Railway may use for service name
+    service = (
+        (payload.get("service") or {}).get("name")
+        or payload.get("serviceName")
+        or (payload.get("deployment") or {}).get("serviceName")
+        or (payload.get("project") or {}).get("name")
+        or "unknown"
+    )
+
+    # Try multiple paths for status
+    status = (
+        deployment.get("status")
+        or payload.get("status")
+        or payload.get("type")
+        or "UNKNOWN"
+    )
 
     entry = {
         "timestamp":   timestamp,
@@ -937,6 +952,7 @@ async def railway_webhook(request: Request):
         "commit":      meta.get("commitMessage", ""),
         "branch":      meta.get("branch", ""),
         "author":      meta.get("author", ""),
+        "_raw":        payload,
     }
 
     entries.insert(0, entry)
@@ -947,6 +963,12 @@ async def railway_webhook(request: Request):
 @app.get("/_railway/status")
 async def railway_status():
     return load_railway_status()
+
+
+@app.get("/_railway/debug")
+async def railway_debug():
+    entries = load_railway_status()
+    return [e.get("_raw", {}) for e in entries[:5]]
 
 
 IGNORE_EXTENSIONS = {".js", ".css", ".png", ".ico", ".svg", ".jpg", ".jpeg", ".gif", ".woff", ".woff2", ".ttf", ".map", ".txt", ".php", ".asp", ".aspx", ".jsp", ".xml", ".zip", ".tar", ".gz", ".sql", ".bak", ".backup", ".old", ".orig", ".env", ".log", ".conf", ".config", ".cfg", ".ini", ".yaml", ".yml", ".toml"}
